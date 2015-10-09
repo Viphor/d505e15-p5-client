@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,10 +17,12 @@ import java.io.IOException;
 
 public class MainActivity extends Activity {
     private EditText textToSend;
+    private EditText hostField;
     private TextView response;
     private Button sendButton;
     private Button connectButton;
     private TCPConnectionHandler connectionHandler;
+    private boolean connected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +30,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         textToSend      = (EditText) findViewById(R.id.text_to_send);
+        hostField       = (EditText) findViewById(R.id.host_field);
         response        = (TextView) findViewById(R.id.response);
         sendButton      = (Button)   findViewById(R.id.send);
         connectButton   = (Button)   findViewById(R.id.connect_button);
@@ -44,12 +48,26 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("unchecked")
     public void connect(View view) {
-        connectionHandler = new TCPConnectionHandler();
-        connectionHandler.execute();
+        if (!connected) {
+            connectionHandler = new TCPConnectionHandler();
+            connectionHandler.execute();
+        } else if (connectionHandler != null){
+            connectionHandler.disconnect();
+        }
     }
 
     private synchronized void setResponse(String s) {
         response.setText(s);
+    }
+
+    private synchronized void setConnected(boolean b) {
+        connected = b;
+
+        if (connected) {
+            connectButton.setText("Disconnect");
+        } else {
+            connectButton.setText("Connect");
+        }
     }
 
     /**
@@ -61,17 +79,21 @@ public class MainActivity extends Activity {
      */
     private class TCPConnectionHandler extends AsyncTask {
         private TCPClient client;
+        private String hostName;
 
         @Override
         protected Object doInBackground(Object[] params) {
-            client = new TCPClient("192.168.43.44", 1337);
+            hostName = hostField.getText().toString();
+            client = new TCPClient(hostName, 1337);
             try {
-                client.connect();
-                setButtonEnabled(connectButton, false);
+                localSetConnected(true);
                 setButtonEnabled(sendButton, true);
+                client.connect();
 
                 while (client.isConnected()) {
-                    localSetResponse(client.readLine());
+                    String response = client.readLine();
+                    Log.d("TCPResponse", response);
+                    localSetResponse(response);
                 }
             } catch (IOException e) {
                 // Lazy ass solution
@@ -80,7 +102,7 @@ public class MainActivity extends Activity {
                     localSetResponse("Could not connect");
                 }
             } finally {
-                setButtonEnabled(connectButton, true);
+                localSetConnected(false);
                 setButtonEnabled(sendButton, false);
             }
 
@@ -104,11 +126,30 @@ public class MainActivity extends Activity {
             return client.isConnected();
         }
 
+        public synchronized void disconnect() {
+            if (isConnected()) {
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    localSetResponse("Disconnect failed");
+                }
+            }
+        }
+
         private synchronized void localSetResponse(final String s) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     setResponse(s);
+                }
+            });
+        }
+
+        private synchronized void localSetConnected(final boolean b) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setConnected(b);
                 }
             });
         }

@@ -49,9 +49,9 @@ public class TCPClient {
      */
     public void connect() throws IOException {
         try {
-            Log.d(DEBUG_FLAG, "connecting");
+            //Log.d(DEBUG_FLAG, "connecting");
             socket = new Socket(host, port);
-            Log.d(DEBUG_FLAG, "connected");
+            //Log.d(DEBUG_FLAG, "connected");
             outToServer = new DataOutputStream(socket.getOutputStream());
             inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             connected = true;
@@ -80,14 +80,15 @@ public class TCPClient {
         //char low = (char)(sessionId & 0xffff);
         // String.valueOf() is for ensuring that we create a string,
         // and not just adding the values of high and low.
-        toSend = /*String.valueOf(high) + low +*/ input + "\n";
+        toSend = /*String.valueOf(high) + low +*/ input + "\u001a"; // \u001a = EOF
+        byte[] bytes = toSend.getBytes();
 
-        outToServer.writeBytes(toSend);
+        outToServer.write(bytes);
     }
 
     /**
      * Reads a single line from the server.
-     * Does not return if no '\n' or EOF char is met.
+     * Does not return if EOF char is not met.
      *
      * @return The String received from the server, empty on system commands
      * @throws IOException On no connection, or unable to read
@@ -118,14 +119,16 @@ public class TCPClient {
         char[] buffer = new char[2048];
         int charsRead = 0;
         while ((charsRead = inFromServer.read(buffer)) != -1) {
-            if (buffer[charsRead - 1] == '\n') {
+            if (buffer[charsRead - 1] == '\u001a') {
                 break;
             }
         }
 
+        //Log.d(DEBUG_FLAG, String.valueOf(buffer[0]));
+
         return charsRead != -1
                 ? new String(buffer).substring(0, charsRead - 1)
-                : "\u001a"; // \u001a = EOF
+                : "\n"; // \u001a = EOF
     }
 
     /**
@@ -141,7 +144,7 @@ public class TCPClient {
 
         try {
             // Needs to be changed to some single byte instruction
-            outToServer.writeBytes("close\n");
+            outToServer.writeBytes("close\u001a");
             socket.close();
         } catch (IOException e) {
             throw new IOException("Could not close connection correctly.", e);

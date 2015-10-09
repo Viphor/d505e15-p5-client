@@ -29,9 +29,8 @@
         android:layout_height="wrap_content"
         android:text="Response"
         android:id="@+id/response_text"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="178dp" />
+        android:layout_below="@+id/response"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -39,7 +38,7 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Output"
         android:id="@+id/response"
-        android:layout_above="@+id/response_text"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
     <Button
@@ -49,7 +48,17 @@
         android:text="Connect"
         android:id="@+id/connect_button"
         android:onClick="connect"
-        android:layout_below="@+id/send"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/host_field"
+        android:layout_above="@+id/connect_button"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
 </RelativeLayout>
