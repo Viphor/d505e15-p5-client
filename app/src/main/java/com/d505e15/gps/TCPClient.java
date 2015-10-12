@@ -14,6 +14,7 @@ import java.net.Socket;
 public class TCPClient {
     private static final String DEBUG_FLAG = "TCPClient";
 
+    private static final int BUFFER_SIZE = 65536;
     private Socket socket;
     private String host;
     private int port;
@@ -47,6 +48,7 @@ public class TCPClient {
      * Sets up a connection to the server
      * @throws IOException If no connection to the server
      */
+
     public void connect() throws IOException {
         try {
             //Log.d(DEBUG_FLAG, "connecting");
@@ -69,11 +71,10 @@ public class TCPClient {
      * @param input text to send
      * @throws IOException On no connection, or unable to send
      */
-    public void writeLine(String input) throws IOException {
+    public void writeString(String input) throws IOException {
         if (!connected) {
             throw new IOException("Not connected! Tip: call connect() first!");
         }
-
         String toSend;
         // Encoding the bytes of the sessionId to chars
         //char high = (char)(sessionId >> 16);
@@ -93,7 +94,7 @@ public class TCPClient {
      * @return The String received from the server, empty on system commands
      * @throws IOException On no connection, or unable to read
      */
-    public String readLine() throws IOException {
+    public String readString() throws IOException {
         if (!connected) {
             throw new IOException("Not connected! Tip: call connect() first!");
         }
@@ -101,7 +102,7 @@ public class TCPClient {
         String stringRead = null;
         try {
             // If sessionId turns out to be needed, implement here
-            stringRead = localReadLine();
+            stringRead = localReadString();
             //System.out.println("Read: " + stringRead);
         } catch (IOException e) {
             throw new IOException("Could not read from server", e);
@@ -115,8 +116,8 @@ public class TCPClient {
         return stringRead;
     }
 
-    private String localReadLine() throws IOException {
-        char[] buffer = new char[2048];
+    private String localReadString() throws IOException {
+        char[] buffer = new char[TCPClient.BUFFER_SIZE];
         int charsRead = 0;
         while ((charsRead = inFromServer.read(buffer)) != -1) {
             if (buffer[charsRead - 1] == '\u001a') {
