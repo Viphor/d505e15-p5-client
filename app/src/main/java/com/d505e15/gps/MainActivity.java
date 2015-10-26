@@ -2,15 +2,14 @@ package com.d505e15.gps;
 
 import android.app.Activity;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.d505e15.TCPClient;
 
 import java.io.IOException;
 
@@ -40,7 +39,7 @@ public class MainActivity extends Activity {
 
     public void sendMessage(View view) {
         if (connectionHandler != null && connectionHandler.isConnected()) {
-            connectionHandler.writeLine(textToSend.getText().toString());
+            connectionHandler.writeString(textToSend.getText().toString());
         } else {
             setResponse("Error");
         }
@@ -74,7 +73,7 @@ public class MainActivity extends Activity {
      * Class that handles the connection asynchronously
      *
      * To initiate the run loop, call execute()
-     * Once running, call writeLine(String output) to send
+     * Once running, call writeString(String output) to send
      * the string to the server
      */
     private class TCPConnectionHandler extends AsyncTask {
@@ -91,7 +90,7 @@ public class MainActivity extends Activity {
                 client.connect();
 
                 while (client.isConnected()) {
-                    String response = client.readLine();
+                    String response = client.readString();
                     Log.d("TCPResponse", response);
                     localSetResponse(response);
                 }
@@ -114,9 +113,9 @@ public class MainActivity extends Activity {
             connectionHandler = null;
         }
 
-        public synchronized void writeLine(String output) {
+        public void writeString(String output) {
             try {
-                client.writeLine(output);
+                client.writeString(output);
             } catch (IOException e) {
                 e.printStackTrace();
             }
