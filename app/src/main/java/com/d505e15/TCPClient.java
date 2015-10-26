@@ -14,7 +14,7 @@ public class TCPClient {
     // Just because..
     private static void log(String text) { System.err.println(DEBUG_FLAG + ": " + text); }
 
-    private static final char    EOF = '\u00a1';
+    private static final byte    EOF = 0b0;
     private static final int     BUFFER_SIZE = 65536;
 
     private Socket               socket;
@@ -31,7 +31,7 @@ public class TCPClient {
 
 
     private short getNextRequestId() {
-        return lastRequestId++;
+        return ++lastRequestId;
     }
 
 
@@ -113,6 +113,7 @@ public class TCPClient {
         byte[] bytes = out.getBytes();
 
         if (bytes.length > BUFFER_SIZE - 1) {
+            log("Sending a large message");
             for (int i = 0; i < bytes.length / (BUFFER_SIZE - 1); i++) {
                 writeHeader(new RequestHeader(clientId, getNextRequestId(),
                         RequestCommand.SEND_DATA, i < bytes.length / (BUFFER_SIZE - 1),
@@ -129,12 +130,18 @@ public class TCPClient {
                 }
             }
         } else {
+            log("Sending a small message");
             writeHeader(new RequestHeader(clientId, getNextRequestId(),
                     RequestCommand.SEND_DATA, (byte) 0));
+            log("Wrote header");
             output.write(bytes);
+            log("Wrote text");
             writeEOF();
+            log("Wrote EOF");
             RequestHeader header = handleHeader();
-            if (header == null || header.getRequestCommand() != RequestCommand.ACK) {
+            log("Received header");
+            if (header == null || header.getRequestCommand() != RequestCommand.ACK
+                    || header.getRequestId() != lastRequestId) {
                 throw new IOException("Failed to send message");
             }
         }
@@ -145,7 +152,8 @@ public class TCPClient {
     }
 
     private void writeEOF() throws IOException {
-        output.write((byte)EOF);
+
+        output.write(EOF);
     }
 
     /**
@@ -195,7 +203,7 @@ public class TCPClient {
         byte[] buffer = new byte[BUFFER_SIZE];
         int charsRead = 0;
         while ((charsRead = input.read(buffer)) != -1) {
-            if (buffer[charsRead - 1] == '\u001a') {
+            if (buffer[charsRead - 1] == EOF) {
                 break;
             }
         }
@@ -204,7 +212,7 @@ public class TCPClient {
 
         return charsRead != -1
                 ? new String(buffer).substring(0, charsRead - 1)
-                : "\n"; // \u001a = EOF
+                : "\n";
     }
 
     /**

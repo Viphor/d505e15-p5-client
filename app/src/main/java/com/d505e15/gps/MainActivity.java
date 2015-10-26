@@ -38,8 +38,14 @@ public class MainActivity extends Activity {
     }
 
     public void sendMessage(View view) {
+        //connectionHandler.writeString(textToSend.getText().toString());
         if (connectionHandler != null && connectionHandler.isConnected()) {
-            connectionHandler.writeString(textToSend.getText().toString());
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    connectionHandler.writeString(textToSend.getText().toString());
+                }
+            }).start();
         } else {
             setResponse("Error");
         }
@@ -51,7 +57,12 @@ public class MainActivity extends Activity {
             connectionHandler = new TCPConnectionHandler();
             connectionHandler.execute();
         } else if (connectionHandler != null){
-            connectionHandler.disconnect();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    connectionHandler.disconnect();
+                }
+            }).start();
         }
     }
 
@@ -90,9 +101,10 @@ public class MainActivity extends Activity {
                 client.connect();
 
                 while (client.isConnected()) {
-                    String response = client.readString();
-                    Log.d("TCPResponse", response);
-                    localSetResponse(response);
+                    Thread.sleep(100, 0);
+                    //String response = client.readString();
+                    //Log.d("TCPResponse", response);
+                    //localSetResponse(response);
                 }
             } catch (IOException e) {
                 // Lazy ass solution
@@ -100,6 +112,8 @@ public class MainActivity extends Activity {
                 if (!client.isConnected()) {
                     localSetResponse("Could not connect");
                 }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 localSetConnected(false);
                 setButtonEnabled(sendButton, false);
@@ -113,7 +127,7 @@ public class MainActivity extends Activity {
             connectionHandler = null;
         }
 
-        public void writeString(String output) {
+        public synchronized void writeString(String output) {
             try {
                 client.writeString(output);
             } catch (IOException e) {
