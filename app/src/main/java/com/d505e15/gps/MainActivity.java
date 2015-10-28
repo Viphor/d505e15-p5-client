@@ -1,6 +1,9 @@
 package com.d505e15.gps;
 
 import android.app.Activity;
+import android.content.Context;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +12,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import android.location.Location;
+import android.location.LocationListener;
+import android.os.Bundle;
+
+
+import com.d505e15.GPSTracker;
 import com.d505e15.TCPClient;
 
 import java.io.IOException;
@@ -20,8 +29,11 @@ public class MainActivity extends Activity {
     private TextView response;
     private Button sendButton;
     private Button connectButton;
+    private Button gpsButton;
+    private TextView gpsText;
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +45,40 @@ public class MainActivity extends Activity {
         response        = (TextView) findViewById(R.id.response);
         sendButton      = (Button)   findViewById(R.id.send);
         connectButton   = (Button)   findViewById(R.id.connect_button);
+        gpsButton       = (Button)   findViewById(R.id.getGpsButton) ;
+        gpsText         = (TextView) findViewById(R.id.showGPSLocation);
 
         sendButton.setEnabled(false);
+
+        Button ASButton = (Button) findViewById(R.id.getGpsButton);
+
+        ASButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                LocationManager mlocManager=null;
+                LocationListener mlocListener;
+                mlocManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+                mlocListener = new GPSTracker();
+                mlocManager.requestLocationUpdates( LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+
+                if (mlocManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    if(GPSTracker.latitude>0)
+                    {
+                        gpsText.append("Latitude:- " + GPSTracker.latitude + '\n');
+                        gpsText.append("Longitude:- " + GPSTracker.longitude + '\n');
+                    }
+                  /*  else
+                    {
+                        alert.setTitle("Wait");
+                        alert.setMessage("GPS in progress, please wait.");
+                        alert.setPositiveButton("OK", null);
+                        alert.show();
+                    }*/
+                } else {
+                    gpsText.setText("GPS is not turned on...");
+                }
+
+            }
+        });
     }
 
     public void sendMessage(View view) {
@@ -177,5 +221,10 @@ public class MainActivity extends Activity {
         }
 
     }
+
+
+
+
+
 
 }
