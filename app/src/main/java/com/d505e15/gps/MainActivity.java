@@ -1,7 +1,9 @@
 package com.d505e15.gps;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -11,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.d505e15.GPSTracker;
@@ -22,6 +25,9 @@ import java.io.IOException;
 
 
 public class MainActivity extends Activity {
+    private static MainActivity mainActivity;
+    public  static MainActivity getMainActivity() { return mainActivity; }
+
     private EditText textToSend;
     private EditText hostField;
     private TextView response;
@@ -34,11 +40,16 @@ public class MainActivity extends Activity {
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
 
+    private LocationManager mlocManager = null;
+    private LocationListener mlocListener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mainActivity    = this;
 
         textToSend      = (EditText) findViewById(R.id.text_to_send);
         hostField       = (EditText) findViewById(R.id.host_field);
@@ -52,10 +63,13 @@ public class MainActivity extends Activity {
 
         sendButton.setEnabled(false);
 
+        mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        mlocListener = new GPSTracker();
+
         speedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                speedText.append(GPSTracker.speedString);
+                speedText.setText(GPSTracker.speed * 3.6 + " km/h");
 
             }
         });
@@ -65,24 +79,25 @@ public class MainActivity extends Activity {
 
         gpsButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                LocationManager mlocManager = null;
-                LocationListener mlocListener;
-                mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                mlocListener = new GPSTracker();
                 mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
 
                 if (mlocManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     if (GPSTracker.latitude > 0) {
-                        gpsText.append("Latitude:- " + GPSTracker.latitude + '\n');
-                        gpsText.append("Longitude:- " + GPSTracker.longitude + '\n');
-                    }
-                  /*  else
-                    {
+                        gpsText.setText("Latitude:- " + GPSTracker.latitude + '\n' +
+                                "Longitude:- " + GPSTracker.longitude + '\n');
+                    } else {
+                        final AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.getMainActivity());
                         alert.setTitle("Wait");
                         alert.setMessage("GPS in progress, please wait.");
-                        alert.setPositiveButton("OK", null);
+                        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        });
+                        alert.setCancelable(true);
                         alert.show();
-                    }*/
+                    }
                 } else {
                     gpsText.setText("GPS is not turned on...");
                 }
