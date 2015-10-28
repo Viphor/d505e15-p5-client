@@ -12,10 +12,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import android.location.Location;
-import android.location.LocationListener;
-import android.os.Bundle;
-import android.widget.Toast;
 
 import com.d505e15.GPSTracker;
 import com.d505e15.TCPClient;
