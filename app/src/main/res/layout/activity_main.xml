@@ -80,6 +80,26 @@
         android:layout_alignEnd="@+id/text_to_send"
         android:layout_toEndOf="@+id/response"
         android:layout_above="@+id/response"
-        android:layout_toRightOf="@+id/response" />
+        android:layout_alignLeft="@+id/response_text"
+        android:layout_alignStart="@+id/response_text" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get Speed"
+        android:id="@+id/getSpeedButton"
+        android:layout_above="@+id/host_field"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/showSpeed"
+        android:layout_above="@+id/host_field"
+        android:layout_toRightOf="@+id/response_text"
+        android:layout_alignRight="@+id/host_field"
+        android:layout_alignEnd="@+id/host_field"
+        android:layout_alignTop="@+id/getSpeedButton" />
 
 </RelativeLayout>
