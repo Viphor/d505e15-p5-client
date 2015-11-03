@@ -26,7 +26,7 @@ public class TCPClient {
     private DataOutputStream     output;
     private BufferedInputStream  input;
 
-    private int                  clientId = 0;
+    private static int           clientId = 0;
     private short                lastRequestId = 0;
 
 

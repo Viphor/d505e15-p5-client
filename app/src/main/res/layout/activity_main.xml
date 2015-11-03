@@ -49,7 +49,8 @@
         android:id="@+id/connect_button"
         android:onClick="connect"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignLeft="@+id/host_field"
+        android:layout_alignStart="@+id/host_field" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -101,5 +102,15 @@
         android:layout_alignRight="@+id/host_field"
         android:layout_alignEnd="@+id/host_field"
         android:layout_alignTop="@+id/getSpeedButton" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Auto send location"
+        android:id="@+id/button"
+        android:layout_alignTop="@+id/connect_button"
+        android:layout_alignRight="@+id/host_field"
+        android:layout_alignEnd="@+id/host_field"
+        android:onClick="autoSend"/>
 
 </RelativeLayout>

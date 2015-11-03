@@ -40,8 +40,10 @@ public class MainActivity extends Activity {
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
 
-    private LocationManager mlocManager = null;
-    private LocationListener mlocListener;
+    public LocationManager mlocManager = null;
+    public LocationListener mlocListener;
+
+    private Thread autoSendThread = null;
 
 
     @Override
@@ -66,16 +68,14 @@ public class MainActivity extends Activity {
         mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mlocListener = new GPSTracker();
 
+
         speedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                speedText.setText(GPSTracker.speed * 3.6 + " km/h");
+                speedText.setText(GPSTracker.speedString + " km/h");
 
             }
         });
-
-
-
 
         gpsButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -104,6 +104,16 @@ public class MainActivity extends Activity {
 
             }
         });
+    }
+
+    public void autoSend(View view) {
+        if (autoSendThread == null) {
+            autoSendThread = new Thread(new LocationPinger(hostField.getText().toString(), 1337));
+            autoSendThread.start();
+        } else {
+            Toast t = Toast.makeText(this, "Auto send location is already running", Toast.LENGTH_LONG);
+            t.show();
+        }
     }
 
     public void sendMessage(View view) {
