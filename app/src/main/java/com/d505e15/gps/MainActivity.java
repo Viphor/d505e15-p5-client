@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.AlertDialog;
 
 
 import com.d505e15.GPSTracker;
@@ -107,13 +108,28 @@ public class MainActivity extends Activity {
     }
 
     public void autoSend(View view) {
-        if (autoSendThread == null) {
-            autoSendThread = new Thread(new LocationPinger(hostField.getText().toString(), 1337));
-            autoSendThread.start();
-        } else {
-            Toast t = Toast.makeText(this, "Auto send location is already running", Toast.LENGTH_LONG);
-            t.show();
+        if (connectionHandler != null && connectionHandler.isConnected()) {
+            if (autoSendThread == null) {
+                autoSendThread = new Thread(new LocationPinger(hostField.getText().toString(), 1337));
+                autoSendThread.start();
+            } else {
+                Toast t = Toast.makeText(this, "Auto send location is already running", Toast.LENGTH_LONG);
+                t.show();
+            }
         }
+            else
+            {
+                AlertDialog alerdialog = new AlertDialog.Builder(this).create();
+                alerdialog.setTitle("Not connected to server");
+                alerdialog.setMessage("The client is not connected to a server");
+                alerdialog.setButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+                alerdialog.show();
+            }
+
     }
 
     public void sendMessage(View view) {

@@ -85,4 +85,15 @@ public class RequestHeader {
 
         return bytes;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof RequestHeader)) {
+            return false;
+        }
+
+        RequestHeader h = (RequestHeader)o;
+
+        return id == h.id && requestId == h.requestId && lastMessage == h.lastMessage;
+    }
 }

@@ -1,9 +1,12 @@
 package com.d505e15;
 
+import android.app.DownloadManager;
+
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -28,7 +31,7 @@ public class TCPClient {
 
     private static int           clientId = 0;
     private short                lastRequestId = 0;
-
+    ArrayList<String> newlist = new ArrayList<String>();
 
     private short getNextRequestId() {
         return ++lastRequestId;
@@ -271,5 +274,20 @@ public class TCPClient {
         lastRequestId = ret.getRequestId();
 
         return ret;
+    }
+
+    public void AddToList(String sentMessage)
+    {
+
+        if(!newlist.contains(sentMessage)){
+            newlist.add(sentMessage);
+        }
+
+    }
+
+    public void RemoveFromList( int clientId, short lastRequestId, String sentMessage) {
+        if (this.clientId == clientId && this.lastRequestId == lastRequestId) {
+            newlist.remove(sentMessage);
+        }
     }
 }
