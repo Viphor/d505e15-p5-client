@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Klostergaard on 30/09/15.
@@ -37,6 +39,8 @@ public class TCPClient {
         return ++lastRequestId;
     }
 
+    private static final int        requestRetries = 3;
+    private static final int        requestTimeout = 5;
 
     /**
      * Initializes the TCPClient with a host name and a server port
@@ -143,9 +147,32 @@ public class TCPClient {
             log("Wrote EOF");
             RequestHeader header = handleHeader();
             log("Received header");
+            for(int i = 0; i < requestRetries; i++) {
+                try {
+                    final int tmpI = i;
+                    final TimeoutTask<RequestHeader> timeoutTask = new TimeoutTask<>(new Callable<RequestHeader>() {
+                        @Override
+                        public RequestHeader call() throws Exception {
+
+                            System.out.println("Failed to send message, sending message again, " + tmpI + "try");
+                            writeHeader(new RequestHeader(clientId, getNextRequestId(),
+                                    RequestCommand.SEND_DATA, (byte) 0));
+
+                            return handleHeader();
+                        }
+                    });
+
+                    timeoutTask.execute(requestTimeout, TimeUnit.SECONDS);
+                    break;
+                }   catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
             if (header == null || header.getRequestCommand() != RequestCommand.ACK
                     || header.getRequestId() != lastRequestId) {
+
                 throw new IOException("Failed to send message");
+
             }
         }
     }

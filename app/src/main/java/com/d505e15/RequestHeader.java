@@ -9,6 +9,8 @@ public class RequestHeader {
     private byte    command     = 0;
     private boolean lastMessage = true;
     private byte    messageNo   = 0;
+    private static final int        requestRetries = 3;
+    private static final int        requestTimeout = 5;
 
     public RequestHeader(int id, short requestId, RequestCommand command, byte messageNo) {
         this.id = id;
