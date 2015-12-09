@@ -20,6 +20,10 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.2.0'
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:22.2.1'
+    compile 'com.android.support:design:22.2.1'
+    compile files('C:/Users/Michael/Documents/GitHub/d505e15-p5-client/.idea/libraries/osmdroid-android-4.2.jar')
+    compile files('C:/Users/Michael/Documents/GitHub/d505e15-p5-client/.idea/libraries/slf4j-android-1.5.8.jar')
+    compile files('C:/Users/Michael/Documents/GitHub/d505e15-p5-client/.idea/libraries/osmbonuspack_v5.1.jar')
 }

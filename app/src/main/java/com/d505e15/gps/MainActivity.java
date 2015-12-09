@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -18,7 +19,11 @@ import android.app.AlertDialog;
 
 
 import com.d505e15.GPSTracker;
+import com.d505e15.ShowMapActivity;
 import com.d505e15.TCPClient;
+
+import org.osmdroid.views.MapController;
+import org.osmdroid.views.MapView;
 
 import java.io.IOException;
 
@@ -38,6 +43,7 @@ public class MainActivity extends Activity {
     private TextView gpsText;
     private Button speedButton;
     private TextView speedText;
+    private Button showMap;
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
 
@@ -45,7 +51,8 @@ public class MainActivity extends Activity {
     public LocationListener mlocListener;
 
     private Thread autoSendThread = null;
-
+    private MapView mapView;
+    private MapController mapController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +70,7 @@ public class MainActivity extends Activity {
         gpsText         = (TextView) findViewById(R.id.showGPSLocation);
         speedButton     = (Button)   findViewById(R.id.getSpeedButton);
         speedText       = (TextView) findViewById(R.id.showSpeed);
-
+        showMap         = (Button)   findViewById(R.id.showMap);
         sendButton.setEnabled(false);
 
         mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -78,9 +85,16 @@ public class MainActivity extends Activity {
             }
         });
 
+        showMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, ShowMapActivity.class));
+
+            }
+        });
         gpsButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
+                        mlocManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mlocListener);
 
                 if (mlocManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     if (GPSTracker.latitude > 0) {
@@ -133,7 +147,7 @@ public class MainActivity extends Activity {
     }
 
     public void sendMessage(View view) {
-        //connectionHandler.writeString(textToSend.getText().toString());
+       //connectionHandler.writeString(textToSend.getText().toString());
         if (connectionHandler != null && connectionHandler.isConnected()) {
             new Thread(new Runnable() {
                 @Override
@@ -144,6 +158,7 @@ public class MainActivity extends Activity {
         } else {
             setResponse("Error");
         }
+
     }
 
     @SuppressWarnings("unchecked")
