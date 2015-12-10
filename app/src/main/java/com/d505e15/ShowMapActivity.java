@@ -71,22 +71,7 @@ public class ShowMapActivity extends AppCompatActivity {
         myPath.addPoint(geoPoint05);
         myPath.addPoint(geoPoint06);
         map.getOverlays().add(myPath);
-
-        //--- Create Another Overlay for multi marker
-        anotherOverlayItemArray = new ArrayList<OverlayItem>();
-        anotherOverlayItemArray.add(new OverlayItem(
-                "0, 0", "0, 0", new GeoPoint(GPSTracker.latitude, GPSTracker.longitude)));
-
-
-        ItemizedIconOverlay<OverlayItem> anotherItemizedIconOverlay
-                = new ItemizedIconOverlay<OverlayItem>(
-                this, anotherOverlayItemArray, null);
-        map.getOverlays().add(anotherItemizedIconOverlay);
-        //---
-
-
-
-
+        
     }
 }
 
