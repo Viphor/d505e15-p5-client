@@ -8,6 +8,8 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
+
+import com.d505e15.gps.MainActivity;
 import com.d505e15.gps.R;
 
 import java.util.ArrayList;
@@ -19,15 +21,14 @@ import org.osmdroid.views.overlay.PathOverlay;
 
 public class ShowMapActivity extends AppCompatActivity {
     private static ShowMapActivity localActivity;
-
+    final Bundle stringArrayList = getIntent().getExtras();
+    public ArrayList<String> stringArray = stringArrayList.getStringArrayList("string_array");
     public static ShowMapActivity getActivity() {
         return localActivity;
     }
 
     public List<GeoPoint> gpsList = new ArrayList<GeoPoint>();
 
-
-    ArrayList<OverlayItem> anotherOverlayItemArray;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,14 +41,9 @@ public class ShowMapActivity extends AppCompatActivity {
         map.setMultiTouchControls(true);
         MapController mapController = new MapController(map);
         mapController.setZoom(15);
-
-        gpsList.add(new GeoPoint(39.9877396, 116.4491));
-        gpsList.add(new GeoPoint(39.9854851, 116.450905));
-        gpsList.add(new GeoPoint(39.9869347, 116.459579));
-        gpsList.add(new GeoPoint(39.9796066, 116.470894));
-        gpsList.add(new GeoPoint(39.9829674, 116.476654));
-        gpsList.add(new GeoPoint(39.978981, 116.483788));
-
+        for(String string : stringArray){
+            System.out.println(string);
+        }
         PathOverlay myPath = new PathOverlay(Color.BLACK, this);
         myPath.getPaint().setStrokeWidth(5);
         for(GeoPoint geoPoint : gpsList) {

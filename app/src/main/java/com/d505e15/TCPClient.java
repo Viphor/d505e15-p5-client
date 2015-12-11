@@ -154,7 +154,7 @@ public class TCPClient {
                     RequestCommand.SEND_DATA, (byte) 0));
             log("Wrote header");
             output.write(bytes);
-            log("Wrote text");
+            log("Wrote text: " + out);
             writeEOF();
             log("Wrote EOF");
             RequestHeader header = handleHeader();

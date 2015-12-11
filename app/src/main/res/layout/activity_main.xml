@@ -124,4 +124,16 @@
         android:layout_alignRight="@+id/getSpeedButton"
         android:layout_alignEnd="@+id/getSpeedButton" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get route"
+        android:id="@+id/getRoute"
+        android:layout_alignTop="@+id/response"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignBottom="@+id/response_text"
+        android:layout_alignRight="@+id/showMap"
+        android:layout_alignEnd="@+id/showMap" />
+
 </RelativeLayout>

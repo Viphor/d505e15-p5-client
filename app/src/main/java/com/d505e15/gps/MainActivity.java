@@ -22,12 +22,12 @@ import com.d505e15.GPSTracker;
 import com.d505e15.ShowMapActivity;
 import com.d505e15.TCPClient;
 
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 
 import java.io.IOException;
-
-
+import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
@@ -44,12 +44,13 @@ public class MainActivity extends Activity {
     private Button speedButton;
     private TextView speedText;
     private Button showMap;
+    private Button getRoute;
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
 
     public LocationManager mlocManager = null;
     public LocationListener mlocListener;
-
+    public ArrayList list = new ArrayList<String>();
     private Thread autoSendThread = null;
     private MapView mapView;
     private MapController mapController;
@@ -61,6 +62,7 @@ public class MainActivity extends Activity {
 
         mainActivity    = this;
 
+        getRoute        = (Button)   findViewById(R.id.getRoute);
         textToSend      = (EditText) findViewById(R.id.text_to_send);
         hostField       = (EditText) findViewById(R.id.host_field);
         response        = (TextView) findViewById(R.id.response);
@@ -76,6 +78,33 @@ public class MainActivity extends Activity {
         mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mlocListener = new GPSTracker();
 
+        getRoute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        connectionHandler.writeString("getRoute,822458514,725873175");
+                    }
+                }).start();
+                String output = connectionHandler.readString();
+
+                if (output != null) {
+                    String[] outList = output.split(",");
+
+                    for (int i = 0; i < outList.length / 3; i++) {
+                        list.add(new GeoPoint(Double.parseDouble(outList[(i * 3) + 1]), Double.parseDouble(outList[(i * 3) + 2])));
+                    }
+                    Intent i = new Intent(MainActivity.this, ShowMapActivity.class);
+                    i.putStringArrayListExtra("string_array", list);
+                    startActivity(i);
+                } else {
+                    Toast t = Toast.makeText(getMainActivity(), "Could not get a route", Toast.LENGTH_LONG);
+                    t.setText("Could not get a route");
+                    t.show();
+                }
+            }
+        });
 
         speedButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,6 +229,11 @@ public class MainActivity extends Activity {
     private class TCPConnectionHandler extends AsyncTask {
         private TCPClient client;
         private String hostName;
+        private String response;
+        private String textToSend;
+
+        private boolean sendText = false;
+        private boolean receiveText = false;
 
         @Override
         protected Object doInBackground(Object[] params) {
@@ -211,8 +245,22 @@ public class MainActivity extends Activity {
                 client.connect();
 
                 while (client.isConnected()) {
-                    Thread.sleep(100, 0);
-                    //String response = client.readString();
+                    synchronized (this) {
+                        this.wait();
+                    }
+
+                    if (sendText) {
+                        synchronized (textToSend) {
+                            client.writeString(textToSend);
+                        }
+                        sendText = false;
+                    }
+                    if (receiveText) {
+                        synchronized (response) {
+                            response = client.readString();
+                        }
+                        receiveText = false;
+                    }
                     //Log.d("TCPResponse", response);
                     //localSetResponse(response);
                 }
@@ -238,11 +286,15 @@ public class MainActivity extends Activity {
         }
 
         public synchronized void writeString(String output) {
-            try {
-                client.writeString(output);
-            } catch (IOException e) {
-                e.printStackTrace();
+            textToSend = output;
+            sendText = true;
+            synchronized (this) {
+                this.notify();
             }
+        }
+
+        public synchronized String readString() {
+            return response;
         }
 
         public synchronized boolean isConnected() {
