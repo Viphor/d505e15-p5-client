@@ -21,8 +21,8 @@ import org.osmdroid.views.overlay.PathOverlay;
 
 public class ShowMapActivity extends AppCompatActivity {
     private static ShowMapActivity localActivity;
-    final Bundle stringArrayList = getIntent().getExtras();
-    public ArrayList<String> stringArray = stringArrayList.getStringArrayList("string_array");
+    Bundle stringArrayList;
+    public ArrayList<String> stringArray;
     public static ShowMapActivity getActivity() {
         return localActivity;
     }
@@ -34,6 +34,9 @@ public class ShowMapActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         localActivity = this;
 
+        stringArrayList = getIntent().getExtras();
+        stringArray = stringArrayList.getStringArrayList("string_array");
+
         setContentView(R.layout.activity_show_map);
         MapView map = (MapView) findViewById(R.id.mapView);
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -41,10 +44,12 @@ public class ShowMapActivity extends AppCompatActivity {
         map.setMultiTouchControls(true);
         MapController mapController = new MapController(map);
         mapController.setZoom(15);
-        for(String string : stringArray){
-            System.out.println(string);
-        }
+
         PathOverlay myPath = new PathOverlay(Color.BLACK, this);
+        for (int i = 0; i < stringArray.size(); i += 2) {
+            GeoPoint point = new GeoPoint(Double.parseDouble(stringArray.get(i)), Double.parseDouble(stringArray.get(i + 1)));
+            gpsList.add(point);
+        }
         myPath.getPaint().setStrokeWidth(5);
         for(GeoPoint geoPoint : gpsList) {
             myPath.addPoint(geoPoint);

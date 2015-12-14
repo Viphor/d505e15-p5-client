@@ -32,6 +32,19 @@
         android:layout_below="@+id/response"
         android:layout_centerHorizontal="true" />
 
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_below="@+id/getRoute">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+    </RelativeLayout>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -135,5 +148,15 @@
         android:layout_alignBottom="@+id/response_text"
         android:layout_alignRight="@+id/showMap"
         android:layout_alignEnd="@+id/showMap" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Test"
+        android:id="@+id/TestTCP"
+        android:layout_alignTop="@+id/response"
+        android:onClick="testTCP"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>

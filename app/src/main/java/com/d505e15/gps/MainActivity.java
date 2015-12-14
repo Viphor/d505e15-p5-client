@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.AlertDialog;
@@ -45,12 +46,13 @@ public class MainActivity extends Activity {
     private TextView speedText;
     private Button showMap;
     private Button getRoute;
+    private RelativeLayout loadingSymbol;
     private TCPConnectionHandler connectionHandler;
     private boolean connected = false;
 
     public LocationManager mlocManager = null;
     public LocationListener mlocListener;
-    public ArrayList list = new ArrayList<String>();
+    public ArrayList<String> list = new ArrayList<String>();
     private Thread autoSendThread = null;
     private MapView mapView;
     private MapController mapController;
@@ -62,18 +64,20 @@ public class MainActivity extends Activity {
 
         mainActivity    = this;
 
-        getRoute        = (Button)   findViewById(R.id.getRoute);
-        textToSend      = (EditText) findViewById(R.id.text_to_send);
-        hostField       = (EditText) findViewById(R.id.host_field);
-        response        = (TextView) findViewById(R.id.response);
-        sendButton      = (Button)   findViewById(R.id.send);
-        connectButton   = (Button)   findViewById(R.id.connect_button);
-        gpsButton       = (Button)   findViewById(R.id.getGpsButton) ;
-        gpsText         = (TextView) findViewById(R.id.showGPSLocation);
-        speedButton     = (Button)   findViewById(R.id.getSpeedButton);
-        speedText       = (TextView) findViewById(R.id.showSpeed);
-        showMap         = (Button)   findViewById(R.id.showMap);
+        getRoute        = (Button)          findViewById(R.id.getRoute);
+        textToSend      = (EditText)        findViewById(R.id.text_to_send);
+        hostField       = (EditText)        findViewById(R.id.host_field);
+        response        = (TextView)        findViewById(R.id.response);
+        sendButton      = (Button)          findViewById(R.id.send);
+        connectButton   = (Button)          findViewById(R.id.connect_button);
+        gpsButton       = (Button)          findViewById(R.id.getGpsButton) ;
+        gpsText         = (TextView)        findViewById(R.id.showGPSLocation);
+        speedButton     = (Button)          findViewById(R.id.getSpeedButton);
+        speedText       = (TextView)        findViewById(R.id.showSpeed);
+        showMap         = (Button)          findViewById(R.id.showMap);
+        loadingSymbol   = (RelativeLayout)  findViewById(R.id.loadingPanel);
         sendButton.setEnabled(false);
+        loadingSymbol.setVisibility(View.GONE);
 
         mlocManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         mlocListener = new GPSTracker();
@@ -81,28 +85,41 @@ public class MainActivity extends Activity {
         getRoute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                loadingSymbol.setVisibility(View.VISIBLE);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        connectionHandler.writeString("getRoute,822458514,725873175");
+                        connectionHandler.writeString("getRoute,822458514,725873174");
+                        String output = connectionHandler.readString();
+
+                        if (output == null) {
+                            System.err.println("Error in reading string");
+                        }
+
+                        System.err.println("Received string: " + output);
+                        if (output != null) {
+                            String[] outList = output.split(",");
+
+                            for (int i = 0; i < outList.length / 3; i++) {
+                                list.add(outList[(i * 3) + 1]);
+                                list.add(outList[(i * 3) + 2]);
+                            }
+                            Intent i = new Intent(MainActivity.this, ShowMapActivity.class);
+                            i.putStringArrayListExtra("string_array", list);
+                            startActivity(i);
+                        } else {
+                            Toast t = Toast.makeText(getMainActivity(), "Could not get a route", Toast.LENGTH_LONG);
+                            t.setText("Could not get a route");
+                            t.show();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    loadingSymbol.setVisibility(View.GONE);
+                                }
+                            });
+                        }
                     }
                 }).start();
-                String output = connectionHandler.readString();
-
-                if (output != null) {
-                    String[] outList = output.split(",");
-
-                    for (int i = 0; i < outList.length / 3; i++) {
-                        list.add(new GeoPoint(Double.parseDouble(outList[(i * 3) + 1]), Double.parseDouble(outList[(i * 3) + 2])));
-                    }
-                    Intent i = new Intent(MainActivity.this, ShowMapActivity.class);
-                    i.putStringArrayListExtra("string_array", list);
-                    startActivity(i);
-                } else {
-                    Toast t = Toast.makeText(getMainActivity(), "Could not get a route", Toast.LENGTH_LONG);
-                    t.setText("Could not get a route");
-                    t.show();
-                }
             }
         });
 
@@ -182,12 +199,35 @@ public class MainActivity extends Activity {
                 @Override
                 public void run() {
                     connectionHandler.writeString(textToSend.getText().toString());
+                    Log.d("ReturnTextTest", connectionHandler.readString());
                 }
             }).start();
         } else {
             setResponse("Error");
         }
 
+    }
+
+    public void testTCP(View view) {
+        if (connectionHandler != null && connectionHandler.isConnected()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    int e = 0;
+                    String s = "";
+                    for (int i = 0; i < 20000; i++) {
+                        s = s + "t";
+                        connectionHandler.writeString(s);
+                        String t = connectionHandler.readString();
+                        if (!t.equals(s)) {
+                            System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ARGH !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            e++;
+                        }
+                    }
+                    Toast.makeText(getMainActivity(), "Number of errors: " + e, Toast.LENGTH_LONG).show();
+                }
+            }).start();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -249,12 +289,6 @@ public class MainActivity extends Activity {
                         this.wait();
                     }
 
-                    if (sendText) {
-                        synchronized (textToSend) {
-                            client.writeString(textToSend);
-                        }
-                        sendText = false;
-                    }
                     if (receiveText) {
                         synchronized (response) {
                             response = client.readString();
@@ -286,15 +320,23 @@ public class MainActivity extends Activity {
         }
 
         public synchronized void writeString(String output) {
-            textToSend = output;
-            sendText = true;
+            try {
+                client.writeString(output);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             synchronized (this) {
                 this.notify();
             }
         }
 
         public synchronized String readString() {
-            return response;
+            try {
+                return client.readString();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
         public synchronized boolean isConnected() {
