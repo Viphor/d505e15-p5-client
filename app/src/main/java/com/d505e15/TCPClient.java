@@ -32,7 +32,7 @@ public class TCPClient {
     private static void log(String text) { System.err.println(DEBUG_FLAG + ": " + text); }
 
     private static final byte    EOF = 0b0;
-    private static final int     BUFFER_SIZE = 65536;
+    private static final int     BUFFER_SIZE = 512;
 
     private Socket               socket;
     private String               host;
@@ -124,51 +124,41 @@ public class TCPClient {
      * @param out text to send
      * @throws IOException On no connection, or unable to send
      */
-    public void writeString(String out) throws IOException {
-        if (!connected) {
-            throw new IOException("Not connected! Tip: call connect() first!");
-        }
-
+    public final void writeString(String out) throws IOException {
         byte[] bytes = out.getBytes();
+        int ADJUSTED_BUFFER_SIZE = BUFFER_SIZE - 1;
+        int numOfMessages = (bytes.length / ADJUSTED_BUFFER_SIZE);
 
-        if (bytes.length > BUFFER_SIZE - 1) {
-            log("Sending a large message");
-            for (int i = 0; i < bytes.length / (BUFFER_SIZE - 1); i++) {
+        if (bytes.length > ADJUSTED_BUFFER_SIZE) {
+            for (int i = 0; i < numOfMessages; i++) {
                 writeHeader(new RequestHeader(clientId, getNextRequestId(),
-                        RequestCommand.SEND_DATA, i < bytes.length / (BUFFER_SIZE - 1),
+                        RequestCommand.SEND_DATA, false,
                         (byte)(i + 1)));
-                output.write(Arrays.copyOfRange(bytes, i * (BUFFER_SIZE - 1),
-                        BUFFER_SIZE - 1 < bytes.length - i * (BUFFER_SIZE - 1) ?
-                                (i + 1) * (BUFFER_SIZE - 1) :
-                                bytes.length % (BUFFER_SIZE - 1)
-                ));
+                output.write(bytes, i * ADJUSTED_BUFFER_SIZE, ADJUSTED_BUFFER_SIZE);
+                output.flush();
                 writeEOF();
                 RequestHeader header = handleHeader();
                 if (header == null || header.getRequestCommand() != RequestCommand.ACK) {
                     throw new IOException("Failed to send message: " + lastRequestId);
                 }
             }
+            writeHeader(new RequestHeader(clientId, getNextRequestId(), RequestCommand.SEND_DATA, true, (byte) (numOfMessages)));
+            output.write(bytes, numOfMessages * ADJUSTED_BUFFER_SIZE, bytes.length - (numOfMessages * ADJUSTED_BUFFER_SIZE));
+            output.flush();
+            writeEOF();
+            RequestHeader header = handleHeader();
+            if (header == null || header.getRequestCommand() != RequestCommand.ACK) {
+                throw new IOException("Failed to send message: " + lastRequestId);
+            }
         } else {
-            log("Sending a small message");
             writeHeader(new RequestHeader(clientId, getNextRequestId(),
                     RequestCommand.SEND_DATA, (byte) 0));
-            log("Wrote header");
             output.write(bytes);
-            log("Wrote text: " + out);
             writeEOF();
-            log("Wrote EOF");
             RequestHeader header = handleHeader();
-            log("Received header");
-          
-            if (header == null || header.getRequestCommand() != RequestCommand.ACK
-                    || header.getRequestId() != lastRequestId) {
-                writeHeader(new RequestHeader(clientId, getNextRequestId(),
-                        RequestCommand.SEND_DATA, (byte) 0));
+            if (header == null || header.getRequestCommand() != RequestCommand.ACK) {
                 throw new IOException("Failed to send message");
-                }
-
-
-
+            }
         }
     }
 
@@ -194,12 +184,14 @@ public class TCPClient {
         }
 
         StringBuilder stringRead = new StringBuilder();
+        RequestHeader prevHeader = null;
 
         try {
-            RequestHeader header;
+            RequestHeader header = null;
             boolean done = false;
 
             while (!done) {
+                prevHeader = header;
                 header = handleHeader();
                 if (header != null && header.getRequestCommand() == RequestCommand.SEND_DATA) {
                     stringRead.append(localReadString());
@@ -214,12 +206,16 @@ public class TCPClient {
                     log(header.getRequestCommand().toString());
                     throw new IOException("Wrong RequestCommand");
                 } else {
+                    System.err.println("Previous header: " + prevHeader);
                     throw new IOException("Could not read header");
                 }
             }
+            prevHeader = header;
         } catch (IOException e) {
             throw new IOException("Could not read from server", e);
         }
+
+        System.err.println(prevHeader != null ? prevHeader : "null");
 
         return stringRead.toString();
     }

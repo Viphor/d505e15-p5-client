@@ -98,4 +98,9 @@ public class RequestHeader {
 
         return id == h.id && requestId == h.requestId && lastMessage == h.lastMessage;
     }
+
+    @Override
+    public String toString() {
+        return "Id:" + id + ", request:" + requestId + ":" + messageNo + ", last message:" + lastMessage + ", request command: " + getRequestCommand();
+    }
 }

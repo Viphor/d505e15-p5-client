@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        connectionHandler.writeString("getRoute,822458514,725873174");
+                        connectionHandler.writeString("getRoute,822458514,1814461877");//836995367");//606040601");
                         String output = connectionHandler.readString();
 
                         if (output == null) {
